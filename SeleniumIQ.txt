@@ -460,7 +460,56 @@ SOAP (Simple Object Access Protocol)
 
 
 
+interface/Abstract:
 
+In Java, an interface defines a contract (only method signatures, no implementation).
+In Selenium, WebDriver is an interface.
+Different browsers (Chrome, Firefox, Edge, Safari) provide their own implementation of the WebDriver interface.
+
+WebDriver driver = new ChromeDriver();   // ChromeDriver implements WebDriver
+driver.get("https://www.google.com");
+
+WebDriver driver2 = new FirefoxDriver(); // FirefoxDriver implements WebDriver
+driver2.get("https://www.bing.com");
+
+An abstract class can have both abstract methods (no body) and concrete methods (with implementation).
+In frameworks, abstract classes are often used for base setup/teardown.
+
+
+public abstract class BaseTest {
+    
+    protected WebDriver driver;
+
+    // Abstract method - must be implemented by subclasses
+    public abstract void setupDriver();
+
+    // Concrete method - common to all tests
+    public void launchApplication(String url) {
+        driver.get(url);
+    }
+
+    public void tearDown() {
+        if (driver != null) {
+            driver.quit();
+        }
+    }
+}
+
+public class LoginTest extends BaseTest {
+
+    @Override
+    public void setupDriver() {
+        driver = new ChromeDriver();  // Or FirefoxDriver, etc.
+    }
+
+    @Test
+    public void testLogin() {
+        setupDriver();
+        launchApplication("https://example.com");
+        // test steps...
+        tearDown();
+    }
+}
 
 
 
@@ -538,6 +587,7 @@ https://demo.openmrs.org
 Admin/Admin123
 
 Listbox
+
 
 
 
