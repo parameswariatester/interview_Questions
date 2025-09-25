@@ -78,7 +78,15 @@ partiallinkText
 
 9.Grid
 
-10. Takescreenshot & JavascriptExecutor   
+10. Takescreenshot & JavascriptExecutor 
+
+TakesScreenshot ts = (TakesScreenshot) driver;
+        File srcFile = ts.getScreenshotAs(OutputType.FILE);
+
+        // Save screenshot to local path
+        File destFile = new File("C:\\Screenshots\\example.png");
+        FileUtils.copyFile(srcFile, destFile);
+
 
 11. Diff between findElement vs findElements
 
@@ -182,6 +190,7 @@ https://javadoc.io/doc/org.seleniumhq.selenium/selenium-api/2.50.1/org/openqa/se
 	   table#students>tr>td>input:nth-of-type(3)
 
 22. How to submit a form in Selenium??
+Selenium provides a submit() method for <form> or <input type="submit">.
 	<form >
 
 
@@ -191,6 +200,15 @@ https://javadoc.io/doc/org.seleniumhq.selenium/selenium-api/2.50.1/org/openqa/se
 	submit() method
 
 23. diff between explicit and implicit and Thread.sleep
+"Implicit wait is a global wait applied to all elements, instructing Selenium to poll the DOM for a set time when finding elements. Explicit wait is more flexible; it waits for specific conditions like visibility or clickability of an element. Thread.sleep() is a fixed wait that pauses execution regardless of element state and is generally discouraged except for debugging, because it slows tests and can cause flakiness. In practice, I prefer explicit waits for dynamic pages and AJAX calls, with implicit wait as a backup for simpler elements."
+
+driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
+element.sendKeys("John");
+
+Thread.sleep(5000); 
 
 
 24. what is the difference between  findElement and findElements()
@@ -245,25 +263,58 @@ https://javadoc.io/doc/org.seleniumhq.selenium/selenium-api/2.50.1/org/openqa/se
 
 		linkText()			
 		partialLinkText()
+  Check the brokenlink:
+     WebDriver driver = new ChromeDriver();
+        driver.get("https://example.com");
+
+        // Get all links on the page
+        List<WebElement> links = driver.findElements(By.tagName("a"));
+
+        for (WebElement link : links) {
+            String url = link.getAttribute("href");
+            if (url == null || url.isEmpty()) {
+                System.out.println("URL is empty for element: " + link.getText());
+                continue;
+            }
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+                connection.setRequestMethod("HEAD");
+                connection.connect();
+                int responseCode = connection.getResponseCode();
+                if (responseCode >= 400) {
+                    System.out.println("Broken Link: " + url + " | Response Code: " + responseCode);
+                } else {
+                    System.out.println("Valid Link: " + url + " | Response Code: " + responseCode);
+                }
+            } catch (Exception e) {
+                System.out.println("Exception for URL: " + url + " | " + e.getMessage());
+            }
 
 32. how do you handle the element which are having dynamic attribute values?
-	
+	Use Parent-Child Relationships
+       driver.findElement(By.xpath("//form[@id='loginForm']//input[@type='text']")).sendKeys("John");
+
+
+		tr
+		Firstname	Textbox => id = "1245kjalksjgdas" 
+		//label[text()='Firstname']/following-sibling::input
+		//label[contains(text(),'Username:')]/following-sibling::input
 
 
 		attribute value : startswith a constant - startswith()
-		identify the parent and navigate to child
+		
 		index
+	     driver.findElement(By.xpath("(//input[@type='text'])[1]")).sendKeys("John");
+
+		Java SCript executor
+JavascriptExecutor js = (JavascriptExecutor) driver;
+WebElement element = (WebElement) js.executeScript("return document.querySelector('input[name=username]')");
+element.sendKeys("John");
+
 		Xpath Axes Locator
 		
 
-		tr
-
-		Firstname	Textbox => id = "1245kjalksjgdas" 
-
-		//label[text()='Firstname']/following-sibling::input
-
-
-		//label[contains(text(),'Username:')]/following-sibling::input
+		
 
 33. Xpath Functions:
 		startsWith()  
@@ -300,12 +351,73 @@ Exceptions:
   
 1. what is your regression testing strategy? how you performed regression testing?
 
+In my last project (healthcare domain), regression testing was a mix of manual + automation. We identified high-risk modules like claims processing and member enrollment for automation. I created a regression suite in Selenium + RestAssured covering login, eligibility check, premium payment, and claims submission. The suite was integrated with Jenkins for nightly runs, and we tracked execution results in Extent Reports + Jira dashboards. For each release, I performed an impact analysis to update the regression suite, ensuring maximum coverage within the release timelines. This approach reduced regression cycle time from 3 days to 6 hours.
+
 2. You receive a 404 error...how would you troubleshoot that? do you capture logs? How would you capture logs?
   logs...
 
+HTTP 404 Not Found = The client requested a resource (page, API endpoint, image, etc.) but the server couldn’t find it.
+Check the URL
+Is it correct? (typos, wrong case, missing query params, base URL mismatch).
+Environment Issues
+QA vs UAT vs PROD might have different base URLs or endpoints.
+Check config files (e.g., application.properties, testng.xml).
+Deployment Issue
+The page/endpoint might not be deployed correctly on the server.
+Confirm with developers or check deployment logs.
+Authentication/Authorization
+Sometimes 404 is returned instead of 401/403 to mask resources.
+Check if login/session is required.
+
 3. what is the different between Abstraction and Encapsulation?
+Abstraction is about exposing only essential functionalities and hiding implementation (using interfaces/abstract classes), while Encapsulation is about wrapping data and methods into a single unit and controlling access to that data (using access modifiers, getters, and setters).”
+
+
+Abstraction
+WebDriver driver = new ChromeDriver();
+driver.get("https://google.com"); 
+
+Encapsulation
+public class User {
+    private String username;  // private field
+    private String password;  // private field
+
+    // public getter/setter
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+}
+
+
 
 4. How do you handle AJAX calls in selenium webdriver?
+
+a)Use WebDriverWait with ExpectedConditions until the element is visible/clickable/present.
+WebDriver driver = new ChromeDriver();
+driver.get("https://example.com/ajaxPage");
+
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+
+// Wait until AJAX-loaded element is visible
+WebElement ajaxElement = wait.until(ExpectedConditions
+        .visibilityOfElementLocated(By.id("ajaxContent")));
+
+ajaxElement.click();
+
+b) Wait for Invisibility of Loader/Spinner
+wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingSpinner")));
+
+c) Using JavaScript Executor
+JavascriptExecutor js = (JavascriptExecutor) driver;
+wait.until(webDriver -> 
+    (Boolean) js.executeScript("return jQuery.active == 0"));
+
+
+
 
 5. Today you came to office and try to login into the application with same username and  password 
 which it was working fine yesterday but today you are not able to login. 
@@ -587,6 +699,7 @@ https://demo.openmrs.org
 Admin/Admin123
 
 Listbox
+
 
 
 
