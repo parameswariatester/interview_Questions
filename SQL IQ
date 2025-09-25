@@ -1,0 +1,85 @@
+SQL query to find the second-highest salary
+SELECT MAX(salary) AS SecondHighest
+FROM Employees
+WHERE salary < (SELECT MAX(salary) FROM Employees);
+
+How to optimize a slow stored procedure
+Common optimization techniques:
+Analyze Execution Plan – Check for table scans, missing indexes, or inefficient joins.
+Add Indexes – Index columns used in WHERE, JOIN, or ORDER BY.
+Avoid Cursors / Loops – Replace with set-based operations.
+Use Temporary Tables – Store intermediate results to avoid repeated heavy calculations.
+Reduce Nested Queries – Use joins or common table expressions (CTEs) instead.
+Select Only Needed Columns – Avoid SELECT *.
+Example:
+-- Original slow query
+SELECT * 
+FROM Orders o
+WHERE o.CustomerID IN (SELECT CustomerID FROM Customers WHERE Country='US');
+
+-- Optimized version
+CREATE INDEX idx_customers_country ON Customers(Country);
+SELECT o.OrderID, o.CustomerID, o.OrderDate
+FROM Orders o
+JOIN Customers c ON o.CustomerID = c.CustomerID
+WHERE c.Country = 'US';
+3. Difference between INNER JOIN, LEFT JOIN, FULL JOIN
+Join Type	Description	Result
+INNER JOIN	Returns rows with matching keys in both tables	Only matching rows
+LEFT JOIN	Returns all rows from left table + matching from right	Left rows included even if no match
+FULL JOIN	Returns all rows from both tables, matching where possible	Unmatched rows show NULL on the opposite side
+Example:
+SELECT e.Name, d.DepartmentName
+FROM Employees e
+INNER JOIN Departments d ON e.DeptID = d.DeptID; -- only matched employees
+
+SELECT e.Name, d.DepartmentName
+FROM Employees e
+LEFT JOIN Departments d ON e.DeptID = d.DeptID;  -- all employees, NULL if no dept
+
+SELECT e.Name, d.DepartmentName
+FROM Employees e
+FULL JOIN Departments d ON e.DeptID = d.DeptID;  -- all employees + all departments
+4. Ensuring data integrity in automation tests
+Challenges: Multiple test runs hitting the same DB can cause duplicates, conflicts, or inconsistent state.
+Best practices:
+Use transactional testing – Wrap test inserts/updates in transactions and rollback at the end.
+Isolate test data – Use unique identifiers (UUIDs, timestamps) for each run.
+Reset state – Clean or restore DB tables before/after tests.
+Use separate test schemas – Avoid production-like interference.
+Validate with assertions – Check row counts, foreign key constraints, and expected results.
+Example (Java + JDBC):
+Connection conn = DriverManager.getConnection(url, user, pass);
+try {
+    conn.setAutoCommit(false); // start transaction
+
+    // perform inserts/updates
+    PreparedStatement ps = conn.prepareStatement("INSERT INTO Employees ...");
+    ps.executeUpdate();
+
+    // assertions / validations here
+
+    conn.rollback(); // rollback changes after test
+} finally {
+    conn.close();
+}
+5. Indexing in databases and when it could cause performance issues
+Indexing:
+Indexes are database structures that speed up query searches, joins, and ordering.
+Example: CREATE INDEX idx_salary ON Employees(salary);
+Pros:
+Faster SELECT queries with WHERE, JOIN, ORDER BY.
+Cons / When it can hurt performance:
+Too many indexes – Slow down INSERT, UPDATE, DELETE because indexes need updating.
+Unused indexes – Wastes storage and maintenance.
+Index on low-cardinality column – e.g., a gender column (M/F) may not improve search much.
+Fragmentation – Over time, indexes may become fragmented and slow queries.
+Tip: Always analyze query patterns and use indexes selectively.
+
+
+
+5th record:
+SELECT salary
+FROM Employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 4;
