@@ -1,0 +1,63 @@
+https://www.youtube.com/watch?v=73a16-yXAfA
+
+[
+  {
+    "testKey": "QA-123",
+    "summary": "Verify login with valid credentials",
+    "testType": "Manual",
+    "steps": [
+      {"action": "Enter username", "expectedResult": "Username is entered"},
+      {"action": "Enter password", "expectedResult": "Password is entered"},
+      {"action": "Click Login", "expectedResult": "User is logged in"}
+    ]
+  }
+]
+
+
+
+
+@Test(testName = "QA-1234")
+public void loginTest() {
+    // Selenium code
+}
+
+stage('Upload Results to Xray') {
+            steps {
+                script {
+                    // Convert TestNG results to JUnit XML if needed
+                    sh """
+                    curl -H "Content-Type: multipart/form-data" \
+                         -u $JIRA_USER:$JIRA_TOKEN \
+                         -F "file=@target/surefire-reports/testng-results.xml" \
+                         $JIRA_BASE_URL/rest/raven/1.0/import/execution/junit?projectKey=QA
+                    """
+                }
+            }
+        }
+
+
+environment {
+        JIRA_BASE_URL = 'https://your-domain.atlassian.net'
+        JIRA_USER     = credentials('jira-username')   // Jenkins credentials
+        JIRA_TOKEN    = credentials('jira-api-token') // Jenkins credentials
+    }
+
+
+@QA-1234
+Scenario: Verify login with valid credentials
+
+
+
+  stage('Upload Results to Xray') {
+            steps {
+                script {
+                    // Upload cucumber.json results to Xray
+                    sh """
+                    curl -H "Content-Type: application/json" \
+                         -u $JIRA_USER:$JIRA_TOKEN \
+                         -X POST \
+                         --data @target/cucumber.json \
+                         $JIRA_BASE_URL/rest/raven/1.0/import/execution/cucumber
+                    """
+                }
+
