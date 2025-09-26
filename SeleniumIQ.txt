@@ -623,7 +623,80 @@ public class LoginTest extends BaseTest {
     }
 }
 
+How do you ensure your Selenium test code is maintainable and reusable?
+Approach:
+Use Page Object Model (POM): Centralize locators and actions for each page.
+Create reusable utility classes: For waits, screenshots, browser setup, logging, API calls.
+Data-driven testing: Keep test data separate (Excel, JSON, CSV).
+Avoid hard-coded values: Use constants or config files.
+Modularize tests: Write small, focused methods that can be reused across tests.
+Use a framework: TestNG/JUnit for structured test execution, reporting, and grouping.
+Example:
+Instead of repeating driver.findElement(By.id("username")).sendKeys("admin"); in multiple tests, create a LoginPage class with a method login(String user, String pass) that can be reused everywhere.
+2. Describe the Page Object Model (POM). How would you extend it for a large-scale automation project?
+Definition:
+POM is a design pattern where each page of the application has a corresponding class containing locators and actions, separating test logic from page structure.
+Large-scale extensions:
+BasePage class: Contains common methods like click(), sendKeys(), waitForElement().
+Reusable components: Header, footer, menus as separate classes for shared functionality.
+Page Factory: Use @FindBy for clean element initialization.
+Utilities layer: Logging, screenshots, waits, API calls.
+Data-driven layer: Separate Excel/JSON files for test data.
+Integration with CI/CD: For automated regression runs.
+Example:
+public class BasePage {
+    protected WebDriver driver;
+    public BasePage(WebDriver driver){ this.driver = driver; }
+    public void clickElement(WebElement el){ el.click(); }
+}
+3. How do you handle dynamic elements in Selenium?
+Challenges: IDs, classes, or XPath may change dynamically (AJAX, JS updates).
+Solutions:
+Use dynamic locators:
+XPath with contains/starts-with:
+driver.findElement(By.xpath("//button[contains(@id,'submit')]")).click();
+CSS selectors with patterns:
+button[id^='submit_'] → matches IDs starting with submit_.
+Explicit waits for AJAX-loaded elements:
+WebDriverWait wait = new WebDriverWait(driver, 10);
+wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("dynamicElement")));
+Page Factory + lazy loading: Elements are located when accessed.
+Retry mechanisms: RetryAnalyzer to handle intermittent failures.
+4. How would you integrate Selenium tests into a CI/CD pipeline?
+Approach:
+Version control: Store your code in GitHub/GitLab/Bitbucket.
+Build tool: Use Maven/Gradle to build and run tests.
+CI server: Jenkins, GitHub Actions, GitLab CI.
+Pipeline steps:
+Checkout code → Build project → Run Selenium tests → Generate reports → Notify stakeholders.
+Parallel execution: Run tests in multiple browsers/environments using TestNG or Selenium Grid.
+Reporting: ExtentReports or Allure for detailed HTML reports.
+Triggering: On every commit, PR merge, or nightly schedule.
+Example (Jenkins pipeline):
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') { steps { git 'https://github.com/project.git' } }
+        stage('Build') { steps { sh 'mvn clean compile' } }
+        stage('Test') { steps { sh 'mvn test' } }
+        stage('Report') { steps { publishHTML(...) } }
+    }
+}
+5. How do you handle test data (parameterization, external data sources)?
+Approach:
+Data-driven testing: Separate test data from code.
+External sources: Excel, CSV, JSON, DB queries, API responses.
+TestNG DataProvider: Pass multiple inputs to a test method.
+Environment/config files: URLs, credentials, browser types.
+Randomized or unique data: Use Faker library or timestamp-based values to avoid conflicts.
+Example using TestNG DataProvider (Excel):
+@DataProvider(name="loginData")
+public Object[][] getData() { return ExcelUtil.readExcel("login.xlsx"); }
 
+@Test(dataProvider="loginData")
+public void testLogin(String user, String pass){
+    new LoginPage().enterUsername(user).enterPassword(pass).clickLogin();
+}
 
 
 
@@ -699,6 +772,7 @@ https://demo.openmrs.org
 Admin/Admin123
 
 Listbox
+
 
 
 
