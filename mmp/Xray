@@ -1,0 +1,80 @@
+We integrate our Selenium/Cucumber framework with Jenkins and Jira Xray for full traceability. Each Jira test case has a unique ID, which we tag in our automation scripts. When Jenkins runs the pipeline, it generates a Cucumber JSON report, and a post-build step uploads that report to Xray using its REST API. This way, Jira automatically updates test execution status, linking requirements → test cases → automation → CI/CD results without manual effort.
+
+
+https://www.youtube.com/watch?v=73a16-yXAfA
+
+
+ stage('Upload Results to Xray') {
+            steps {
+                script {
+                    // Upload cucumber.json results to Xray
+                    sh """
+                    curl -H "Content-Type: application/json" \
+                         -u $JIRA_USER:$JIRA_TOKEN \
+                         -X POST \
+                         --data @target/cucumber.json \
+                         $JIRA_BASE_URL/rest/raven/1.0/import/execution/cucumber
+                    """
+                }
+
+
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven-3.9.0'   // Pre-configured in Jenkins
+        jdk   'JDK-17'        // Pre-configured in Jenkins
+    }
+
+    environment {
+        JIRA_BASE_URL = 'https://your-domain.atlassian.net'
+        JIRA_USER     = credentials('jira-username')   // Jenkins credentials
+        JIRA_TOKEN    = credentials('jira-api-token') // Jenkins credentials
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/your-org/selenium-testng-project.git'
+            }
+        }
+
+        stage('Run Maven + TestNG Tests') {
+            steps {
+                sh 'mvn clean test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'   // Publish TestNG reports
+                }
+            }
+        }
+
+        stage('Upload Results to Xray') {
+            steps {
+                script {
+                    // Convert TestNG results to JUnit XML if needed
+                    sh """
+                    curl -H "Content-Type: multipart/form-data" \
+                         -u $JIRA_USER:$JIRA_TOKEN \
+                         -F "file=@target/surefire-reports/testng-results.xml" \
+                         $JIRA_BASE_URL/rest/raven/1.0/import/execution/junit?projectKey=QA
+                    """
+                }
+            }
+        }
+
+
+
+@QA-1234
+Scenario: Verify login with valid credentials
+
+
+@Test(testName = "QA-1234", description = "Verify login with valid credentials")
+public void testValidLogin() {
+    // selenium test code
+}
+
+
+    }
